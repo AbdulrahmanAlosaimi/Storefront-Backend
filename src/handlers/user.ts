@@ -4,9 +4,8 @@ import { User, UserStore } from "../models/user";
 const store = new UserStore();
 
 const index = async (_req: Request, res: Response) => {
-  //   const users = await store.index();
-  //   res.json(users);
-  res.send("index");
+  const users = await store.index();
+  res.json(users);
 };
 
 const show = async (req: Request, res: Response) => {
