@@ -1,4 +1,9 @@
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
 import client from "../database";
+
+const pepper: string = process.env.PEPPER as string;
+const saltRounds: number = parseInt(process.env.SALT_ROUNDS as string);
 
 export type User = {
   firstName: string;
@@ -19,15 +24,36 @@ export class UserStore {
     }
   }
 
+  async authenticate(
+    firstName: string,
+    lastName: string,
+    password: string
+  ): Promise<User | null> {
+    const conn = await client.connect();
+    const sql = "SELECT * FROM users WHERE first_name=$1 AND last_name=$2";
+    const result = await conn.query(sql, [firstName, lastName]);
+
+    if (result.rows.length) {
+      const user = result.rows[0];
+
+      if (bcrypt.compareSync(password + pepper, user.password_digest)) {
+        return user;
+      }
+    }
+    return null;
+  }
+
   async create(record: User): Promise<User> {
     try {
       const conn = await client.connect();
       const sql =
-        "INSERT INTO users (firstName, lastName, password_digest) VALUES ($1, $2, $3) RETURNING *";
+        "INSERT INTO users (first_name, last_name, password_digest) VALUES ($1, $2, $3) RETURNING *";
+
+      const hash = bcrypt.hashSync(record.password_digest + pepper, saltRounds);
       const result = await conn.query(sql, [
         record.firstName,
         record.lastName,
-        record.password_digest,
+        hash,
       ]);
       conn.release();
       return result.rows[0];

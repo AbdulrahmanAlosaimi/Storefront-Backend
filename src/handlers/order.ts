@@ -9,17 +9,17 @@ const index = async (_req: Request, res: Response) => {
 };
 
 const show = async (req: Request, res: Response) => {
-  const order = await store.show(parseInt(req.params.id));
+  const order = await store.show(parseInt(req.body.id));
   res.json(order);
 };
 
 const create = async (req: Request, res: Response) => {
   try {
     const order: Order = {
-      productId: parseInt(req.params.productId),
-      quantity: parseInt(req.params.quantity),
-      userId: parseInt(req.params.userId),
-      status: req.params.status,
+      productId: parseInt(req.body.productId),
+      quantity: parseInt(req.body.quantity),
+      userId: parseInt(req.body.userId),
+      status: req.body.status,
     };
     const orderRecord = await store.create(order);
     res.json(orderRecord);
@@ -30,8 +30,9 @@ const create = async (req: Request, res: Response) => {
 };
 
 const destroy = async (req: Request, res: Response) => {
-  const deleted = await store.delete(parseInt(req.params.id));
-  res.json(deleted);
+  await store.delete(parseInt(req.params.id));
+  console.log(`Order with id ${req.params.id} has been deleted`);
+  res.send(`Order with id ${req.params.id} has been deleted`);
 };
 
 const orderRoutes = (app: express.Application) => {
