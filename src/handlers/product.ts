@@ -1,5 +1,9 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { Product, ProductStore } from "../models/product";
+
+import dotenv from "dotenv";
+dotenv.config();
 
 const store = new ProductStore();
 
@@ -14,12 +18,13 @@ const show = async (req: Request, res: Response) => {
 };
 
 const create = async (req: Request, res: Response) => {
+  const product: Product = {
+    name: req.body.name,
+    price: parseInt(req.body.price),
+    category: req.body.category,
+  };
+
   try {
-    const product: Product = {
-      name: req.body.name,
-      price: parseInt(req.body.price),
-      category: req.body.category,
-    };
     const productRecord = await store.create(product);
     res.json(productRecord);
   } catch (err) {
@@ -34,11 +39,25 @@ const destroy = async (req: Request, res: Response) => {
   res.send(`Product with id ${req.params.id} has been deleted`);
 };
 
+const verifyAuthToken = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.headers.authorization as string;
+    console.log(jwt.verify(token, process.env.TOKEN_SECRET as string));
+    next();
+  } catch (err) {
+    console.log(`Invalid authentication when deleting record.`);
+
+    res.status(401);
+    res.json(`Invalid token: ${err}`);
+  }
+};
+
 const productRoutes = (app: express.Application) => {
   app.get("/products", index);
   app.get("/products/:id", show);
-  app.post("/products", create);
-  app.delete("/products/:id", destroy);
+  app.post("/products", verifyAuthToken, create);
+  // app.put("/products/:id", verifyAuthToken, update);
+  app.delete("/products/:id", verifyAuthToken, destroy);
 };
 
 export default productRoutes;

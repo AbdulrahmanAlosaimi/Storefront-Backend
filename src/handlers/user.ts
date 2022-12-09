@@ -1,5 +1,13 @@
-import express, { Request, Response } from "express";
+// Packages
+import express, { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+
+// Database related
 import { User, UserStore } from "../models/user";
+
+// Environment variables
+import dotenv from "dotenv";
+dotenv.config();
 
 const store = new UserStore();
 
@@ -21,13 +29,28 @@ const create = async (req: Request, res: Response) => {
       password_digest: req.body.password_digest,
     };
     const userRecord = await store.create(user);
+    const token = jwt.sign(
+      { user: userRecord },
+      process.env.TOKEN_SECRET as string
+    );
     console.log("User has been created");
-    res.json(userRecord);
+    res.json(token);
   } catch (err) {
     res.status(400);
     console.log(err);
     res.json(err);
   }
+};
+
+const update = async (req: Request, res: Response) => {
+  await store.update({
+    id: req.params.id,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    password_digest: req.body.password_digest,
+  });
+  console.log(`User with id ${req.params.id} has been updated`);
+  res.json(`User with id ${req.params.id} has been updated`);
 };
 
 const destroy = async (req: Request, res: Response) => {
@@ -37,24 +60,65 @@ const destroy = async (req: Request, res: Response) => {
 };
 
 const authenticate = async (req: Request, res: Response) => {
-  const user = await store.authenticate(
-    req.body.firstName,
-    req.body.lastName,
-    req.body.password_digest
-  );
-  if (user) {
-    res.json(user);
-  } else {
-    res.send(`Failed to authenticate, check information supplied`);
+  try {
+    const user = await store.authenticate(
+      req.body.firstName,
+      req.body.lastName,
+      req.body.password_digest
+    );
+    var token = jwt.sign({ user: user }, process.env.TOKEN_SECRET as string);
+    res.json(token);
+  } catch (error) {
+    res.status(401);
+    console.log(`Failed authenticating user. ${error}`);
+    res.json({ error });
+  }
+};
+
+const verifyAuthToken = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.headers.authorization as string;
+    jwt.verify(token, process.env.TOKEN_SECRET as string);
+
+    next();
+  } catch (err) {
+    console.log(`Invalid authentication when deleting record.`);
+
+    res.status(401);
+    res.json(`Invalid token: ${err}`);
+  }
+};
+
+const verifyAuthTokenUpdate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token = req.headers.authorization as string;
+    /* any is used in the following line because jwt does not know the correct type,
+    so there is no way to reach the values inside the object without using any */
+    const decoded: any = jwt.verify(token, process.env.TOKEN_SECRET as string);
+
+    if (decoded.user.id != req.params.id) {
+      throw new Error("User id does not match.");
+    }
+    next();
+  } catch (err) {
+    console.log(`Invalid authentication when deleting record.`);
+
+    res.status(401);
+    res.json(`Invalid token: ${err}`);
   }
 };
 
 const userRoutes = (app: express.Application) => {
   app.get("/users", index);
   app.get("/users/:id", show);
-  app.post("/users", create);
+  app.post("/users", verifyAuthToken, create);
+  app.put("/users/:id", verifyAuthTokenUpdate, update);
   app.post("/users/authenticate", authenticate);
-  app.delete("/users/:id", destroy);
+  app.delete("/users/:id", verifyAuthToken, destroy);
 };
 
 export default userRoutes;
