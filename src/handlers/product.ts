@@ -13,7 +13,7 @@ const index = async (_req: Request, res: Response) => {
 };
 
 const show = async (req: Request, res: Response) => {
-  const product = await store.show(parseInt(req.body.id));
+  const product = await store.show(parseInt(req.params.id));
   res.json(product);
 };
 
@@ -33,6 +33,17 @@ const create = async (req: Request, res: Response) => {
   }
 };
 
+const update = async (req: Request, res: Response) => {
+  await store.update({
+    id: req.params.id,
+    name: req.body.name,
+    price: req.body.price,
+    category: req.body.category,
+  });
+  console.log(`Product with id ${req.params.id} has been updated`);
+  res.json(`Product with id ${req.params.id} has been updated`);
+};
+
 const destroy = async (req: Request, res: Response) => {
   await store.delete(parseInt(req.params.id));
   console.log(`Product with id ${req.params.id} has been deleted`);
@@ -45,7 +56,7 @@ const verifyAuthToken = (req: Request, res: Response, next: NextFunction) => {
     console.log(jwt.verify(token, process.env.TOKEN_SECRET as string));
     next();
   } catch (err) {
-    console.log(`Invalid authentication when deleting record.`);
+    console.log(`Invalid authentication: ${err}`);
 
     res.status(401);
     res.json(`Invalid token: ${err}`);
@@ -56,7 +67,7 @@ const productRoutes = (app: express.Application) => {
   app.get("/products", index);
   app.get("/products/:id", show);
   app.post("/products", verifyAuthToken, create);
-  // app.put("/products/:id", verifyAuthToken, update);
+  app.put("/products/:id", verifyAuthToken, update);
   app.delete("/products/:id", verifyAuthToken, destroy);
 };
 

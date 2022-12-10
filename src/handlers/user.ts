@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 
 // Database related
 import { User, UserStore } from "../models/user";
+import { Order } from "../models/order";
 
 // Environment variables
 import dotenv from "dotenv";
@@ -17,7 +18,7 @@ const index = async (_req: Request, res: Response) => {
 };
 
 const show = async (req: Request, res: Response) => {
-  const user = await store.show(parseInt(req.body.id));
+  const user = await store.show(parseInt(req.params.id));
   res.json(user);
 };
 
@@ -70,7 +71,7 @@ const authenticate = async (req: Request, res: Response) => {
     res.json(token);
   } catch (error) {
     res.status(401);
-    console.log(`Failed authenticating user. ${error}`);
+    console.log(`Failed authenticating user: ${error}`);
     res.json({ error });
   }
 };
@@ -82,14 +83,14 @@ const verifyAuthToken = (req: Request, res: Response, next: NextFunction) => {
 
     next();
   } catch (err) {
-    console.log(`Invalid authentication when deleting record.`);
+    console.log(`Invalid authentication: ${err}`);
 
     res.status(401);
     res.json(`Invalid token: ${err}`);
   }
 };
 
-const verifyAuthTokenUpdate = (
+export const verifyAuthTokenUser = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -105,7 +106,7 @@ const verifyAuthTokenUpdate = (
     }
     next();
   } catch (err) {
-    console.log(`Invalid authentication when deleting record.`);
+    console.log(`Invalid authentication: ${err}`);
 
     res.status(401);
     res.json(`Invalid token: ${err}`);
@@ -113,10 +114,11 @@ const verifyAuthTokenUpdate = (
 };
 
 const userRoutes = (app: express.Application) => {
-  app.get("/users", index);
-  app.get("/users/:id", show);
+  app.get("/users", verifyAuthToken, index);
+  app.get("/users/:id", verifyAuthToken, show);
+  app.post("/users/register", create);
   app.post("/users", verifyAuthToken, create);
-  app.put("/users/:id", verifyAuthTokenUpdate, update);
+  app.put("/users/:id", verifyAuthTokenUser, update);
   app.post("/users/authenticate", authenticate);
   app.delete("/users/:id", verifyAuthToken, destroy);
 };

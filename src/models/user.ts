@@ -32,13 +32,19 @@ export class UserStore {
     const conn = await client.connect();
     const sql = "SELECT * FROM users WHERE first_name=$1 AND last_name=$2";
     const result = await conn.query(sql, [firstName, lastName]);
+    console.log(result.rows);
 
     if (result.rows.length) {
       const user = result.rows[0];
 
       if (bcrypt.compareSync(password + pepper, user.password_digest)) {
+        console.log(`correct password: ${user.password}`);
+
         return user;
       }
+      console.log(
+        `wrong password: ${password}\nCorrect password: ${user.password_digest}`
+      );
     }
     return null;
   }

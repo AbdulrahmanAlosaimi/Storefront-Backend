@@ -36,6 +36,26 @@ export class ProductStore {
     }
   }
 
+  /* any is used in the following line because jwt does not know the correct type,
+    so there is no way to reach the values inside the object without using any */
+  async update(product: any): Promise<Product> {
+    try {
+      const conn = await client.connect();
+      const sql =
+        "UPDATE products SET name=$1, price=$2, category=$3 WHERE id=$4";
+      const result = await conn.query(sql, [
+        product.name,
+        product.price,
+        product.category,
+        product.id,
+      ]);
+      conn.release();
+      return result.rows[0];
+    } catch (err) {
+      throw new Error(`${err}`);
+    }
+  }
+
   async delete(id: number): Promise<Product> {
     try {
       const conn = await client.connect();

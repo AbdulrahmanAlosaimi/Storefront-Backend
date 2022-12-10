@@ -1,3 +1,4 @@
+import { Connection } from "pg";
 import client from "../database";
 
 export type Order = {
@@ -22,7 +23,11 @@ export class OrderStore {
 
   async create(record: Order): Promise<Order> {
     try {
+      console.log(`test in model create`);
+
       const conn = await client.connect();
+      console.log(`connected`);
+
       const sql =
         "INSERT INTO orders (product_id, quantity, user_id, status) VALUES ($1, $2, $3, $4) RETURNING *";
       const result = await conn.query(sql, [
@@ -31,10 +36,33 @@ export class OrderStore {
         record.userId,
         record.status,
       ]);
+      console.log(`something is wrong i can feel it`);
       conn.release();
+
       return result.rows[0];
     } catch (error) {
       throw new Error(`Can't insert order: ${error}`);
+    }
+  }
+
+  /* any is used in the following line because jwt does not know the correct type,
+    so there is no way to reach the values inside the object without using any */
+  async update(order: any) {
+    try {
+      const conn = await client.connect();
+      const sql =
+        "UPDATE orders SET product_id = $1, quantity = $2, user_id = $3, status = $4 WHERE id = $5";
+      const result = await conn.query(sql, [
+        order.productId,
+        order.quantity,
+        order.userId,
+        order.status,
+        order.id,
+      ]);
+      conn.release();
+      return result.rows[0];
+    } catch (err) {
+      throw new Error(`${err}`);
     }
   }
 
@@ -57,6 +85,18 @@ export class OrderStore {
       const result = await conn.query(sql, [id]);
       conn.release();
       return result.rows[0];
+    } catch (error) {
+      throw new Error(`Can't show order: ${error}`);
+    }
+  }
+
+  async showUserOrders(id: number): Promise<Order[]> {
+    try {
+      const conn = await client.connect();
+      const sql = "SELECT * FROM orders WHERE user_id=($1)";
+      const result = await conn.query(sql, [id]);
+      conn.release();
+      return result.rows;
     } catch (error) {
       throw new Error(`Can't show order: ${error}`);
     }
