@@ -29,6 +29,10 @@ const create = async (req: Request, res: Response) => {
       lastName: req.body.lastName,
       password_digest: req.body.password_digest,
     };
+    if (!user.firstName || !user.lastName || !user.password_digest) {
+      res.json("Please make sure you have enter all the required information.");
+      return;
+    }
     const userRecord = await store.create(user);
     const token = jwt.sign(
       { user: userRecord },

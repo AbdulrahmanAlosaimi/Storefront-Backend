@@ -21,12 +21,9 @@ export class OrderStore {
     }
   }
 
-  async create(record: Order): Promise<Order> {
+  async create(record: Order): Promise<Object> {
     try {
-      console.log(`test in model create`);
-
       const conn = await client.connect();
-      console.log(`connected`);
 
       const sql =
         "INSERT INTO orders (product_id, quantity, user_id, status) VALUES ($1, $2, $3, $4) RETURNING *";
@@ -36,7 +33,6 @@ export class OrderStore {
         record.userId,
         record.status,
       ]);
-      console.log(`something is wrong i can feel it`);
       conn.release();
 
       return result.rows[0];
@@ -60,18 +56,22 @@ export class OrderStore {
         order.id,
       ]);
       conn.release();
+      console.log(result);
+
       return result.rows[0];
     } catch (err) {
       throw new Error(`${err}`);
     }
   }
 
-  async delete(id: number): Promise<Order> {
+  async delete(id: number): Promise<any> {
     try {
       const conn = await client.connect();
       const sql = "DELETE FROM orders WHERE id=($1)";
       const result = await conn.query(sql, [id]);
       conn.release();
+      console.log(result);
+
       return result.rows[0];
     } catch (error) {
       throw new Error(`Can't delete order: ${error}`);
