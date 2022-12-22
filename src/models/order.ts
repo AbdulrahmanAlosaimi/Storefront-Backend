@@ -28,6 +28,8 @@ export class OrderStore {
       const result = await conn.query(sql, [record.orderId, record.status]);
       conn.release();
 
+      console.log(result);
+
       return result.rows[0];
     } catch (error) {
       throw new Error(`Can't insert order: ${error}`);

@@ -28,15 +28,13 @@ describe("Order Model", () => {
     // This object is casted as any so the id property can be reached
     const result: any = await store.create({
       productId: 1,
+      orderId: Math.floor(Math.random() * 20),
       quantity: 1,
       userId: 1,
       status: "complete",
     });
     expect(result).toEqual(
       jasmine.objectContaining({
-        product_id: 1,
-        quantity: 1,
-        user_id: 1,
         status: "complete",
       })
     );
@@ -48,9 +46,6 @@ describe("Order Model", () => {
     const result: any = await store.show(orderId);
     expect(result).toEqual(
       jasmine.objectContaining({
-        product_id: 1,
-        quantity: 1,
-        user_id: 1,
         status: "complete",
       })
     );
