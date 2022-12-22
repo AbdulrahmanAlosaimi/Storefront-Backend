@@ -19,6 +19,8 @@ This repo contains the files for the backend of a store, it has all the required
 
 That's it! You should be set to use the backend with Postman or any tools of your liking, the routes can be found in the `REQUIREMENTS.md` file
 
+Note: The server will be running on `localhost` port `3000`, while the database will be running on `localhost` port `5432`.
+
 Note: The database migrations connection information can be found in the `database.json` file, any other environment variables can be found in the `REQUIREMENTS.md` file.
 
 ## Testing

@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 
 // Database related
 import { User, UserStore } from "../models/user";
-import { Order } from "../models/order";
 
 // Environment variables
 import dotenv from "dotenv";

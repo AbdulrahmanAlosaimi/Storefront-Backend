@@ -1,10 +1,6 @@
-import { Connection } from "pg";
 import client from "../database";
 
 export type Order = {
-  productId: number;
-  quantity: number;
-  userId: number;
   status: string;
 };
 
@@ -21,18 +17,15 @@ export class OrderStore {
     }
   }
 
-  async create(record: Order): Promise<Object> {
+  async create(record: any): Promise<Object> {
+    console.log(record);
+
     try {
       const conn = await client.connect();
 
       const sql =
-        "INSERT INTO orders (product_id, quantity, user_id, status) VALUES ($1, $2, $3, $4) RETURNING *";
-      const result = await conn.query(sql, [
-        record.productId,
-        record.quantity,
-        record.userId,
-        record.status,
-      ]);
+        "INSERT INTO orders (id, status) SELECT $1, $2 WHERE NOT EXISTS (SELECT id FROM orders WHERE id = $1) RETURNING *";
+      const result = await conn.query(sql, [record.orderId, record.status]);
       conn.release();
 
       return result.rows[0];
@@ -93,7 +86,8 @@ export class OrderStore {
   async showUserOrders(id: number): Promise<Order[]> {
     try {
       const conn = await client.connect();
-      const sql = "SELECT * FROM orders WHERE user_id=($1)";
+      const sql =
+        "SELECT * FROM order_products, orders WHERE orders.id = order_products.order_id AND order_products.user_id = $1;";
       const result = await conn.query(sql, [id]);
       conn.release();
       return result.rows;

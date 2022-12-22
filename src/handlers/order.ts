@@ -2,12 +2,14 @@ import express, { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 import { Order, OrderStore } from "../models/order";
+import { OrderProductssStore } from "../models/order_products";
 import { verifyAuthTokenUser } from "./user";
 
 import dotenv from "dotenv";
 dotenv.config();
 
 const store = new OrderStore();
+const orderProductsStore = new OrderProductssStore();
 
 const index = async (_req: Request, res: Response) => {
   const orders = await store.index();
@@ -25,8 +27,9 @@ const showUserOrders = async (req: Request, res: Response) => {
 };
 
 const create = async (req: Request, res: Response) => {
-  const order: Order = {
+  const order: any = {
     productId: parseInt(req.body.productId),
+    orderId: parseInt(req.body.orderId),
     quantity: parseInt(req.body.quantity),
     userId: parseInt(req.body.userId),
     status: req.body.status,
@@ -51,7 +54,7 @@ const create = async (req: Request, res: Response) => {
       res.json(`Invalid token: ${err}`);
     }
 
-    const orderRecord = await store.create(order);
+    const orderRecord = await orderProductsStore.create(order);
     console.log(`Created order.`);
     res.json(orderRecord);
   } catch (err) {

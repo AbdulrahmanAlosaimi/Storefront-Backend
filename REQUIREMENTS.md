@@ -13,9 +13,11 @@
 - Create N[token required] `/users` [POST]
 - Create (First time registeration) `/users/register` [POST]
 
-#### Orders
+#### Orders and Order Products
 
 - Current Order by user (args: user id)[token required] `/orders/users/:id` [GET]
+- Create Order (args: Object containing productId, orderId, quantity, userId, status) `/orders` [POST]
+  Note: The way the order is created works by checking if an order has already been created with the same id, if not a new order is created and all the products information can be found in the order_products table
 
 ## Data Shapes
 
@@ -37,10 +39,14 @@
 #### Orders
 
 - id: SERIAL PRIMARY KEY
+- status: VARCHAR(255)
+
+#### Order Products
+
 - product_id: INTEGER, Primary key of Products table
 - quantity: INTEGER
 - user_id: INTEGER, Primary key of Users table
-- status: VARCHAR(255)
+- order_id: INTEGER, Primary key of Orders table
 
 ---
 
